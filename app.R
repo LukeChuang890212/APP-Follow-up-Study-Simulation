@@ -16,16 +16,26 @@ source("Simulation.r")
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Simulation for Estimation in Follow-up Study"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+            sliderInput("p.mr",
+                        "Population Parameter:",
+                        min = 0.0,
+                        max = 0.1,
+                        value = 0.03),
+            sliderInput("ltfur",
+                        "Proportion of Loss of Follow-up:",
+                        min = 0.0,
+                        max = 1.0,
+                        value = 0.3),
+            sliderInput("per.m.in.ltfus",
+                        "Level of Association:",
+                        min = 0.0,
+                        max = 0.1,
+                        value = 0.03)
         ),
 
         # Show a plot of the generated distribution
@@ -39,7 +49,7 @@ ui <- fluidPage(
 server <- function(input, output) {
 
     output$distPlot <- renderPlot({
-
+        sim(input$p.mr,input$ltfur,input$per.m.in.ltfus)
     })
 }
 
