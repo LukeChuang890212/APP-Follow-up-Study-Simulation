@@ -1,100 +1,137 @@
-rm(list=ls())
+# Initialization for actual params
+actual.mr = 0 # actual mr
+actual.ltfur = 0 # actual proportion of loss of follow-up (actual loss rate)
+actual.lv.ass = 0 # actual level of association (the proportion of mortality that mistaken for loss)
 
-# setwd("C:/Users/莊明儒/Desktop/Epidemiology/Follow-up.Simulation")
-source("Functions.r")
+mean.actual.mr = 0 # mean of actual mr
+mean.actual.ltfur = 0 # mean of actual proportion of loss of follow-up (actual loss rate)
+mean.actual.lv.ass = 0 # mean of actual level of association (the proportion of mortality that mistaken for loss)
 
-# essential formula:
-# proportion of total not continue to be followed = avg.p.mr+ltfur-avg.p.mr*per.m.in.ltfus
-# n*(1-p.mr*(1-per.m.in.ltfus)-avg.ltfur)^10 = n*(1-cir*(1-per.m.in.ltfus)-ltfur)
-# avg.ltfur = 1-p.mr*(1-per.m.in.ltfus)-(1-cir*(1-per.m.in.ltfus)-ltfur)^(1/10)
+# Initialization for total amount of mos, nominal.mos, ltfus (from real follow-up)
+n.total.mos = 0 # no. of total (actual) mortality 
+n.total.nominal.mos = 0 # no. of total nominal mortality 
+n.total.ltfus = 0 # no. of total loss
+n.total.actual.mos = 0
+n.total.only.ltfus = 0
+# n.total.mistake = 0
 
-sim = function(p.mr,ltfur,per.m.in.ltfus){
-  N = 50:200 # no. of samples 
+cal.mr = function(n,n.followyr,p.mr,per.m.in.ltfus,avg.ltfur){
+  subjects = sample(n)
   
-  p.mrs = c(p.mr) # mortality rate in pupulation c(0.02,0.1,0.4) 
-  pers.m.in.ltfus = c(per.m.in.ltfus) # percentages of mortality that is mistaken for loss of follow-up (association of loss-to-follow-up with mortality)
-  # conditional prob: P(loss|mortality)
-  n.sim = 1000 # no. of simulation (fixed)
-  ltfurs = c(ltfur) # rate of loss to follow up (fixed)
-  n.followyr = 10 # no. of years to follow up (fixed)
+  # Initialization for total amount of mos, nominal.mos, ltfus
+  # n.total.mos = 0 # no. of total (actual) mortality 
+  # n.total.nominal.mos = 0 # no. of total nominal mortality 
+  # n.total.ltfus = 0 # no. of total loss
+  # n.total.actual.mos = 0
+  # n.total.only.ltfus = 0
+  # n.total.mistake = 0
   
-  n.N = length(N) # no. of differnt sample sizes
-  
-  for(p.mr in p.mrs){
-    # save.dir = paste("bias.x.emr~ss(",p.mr,')',sep='')
-    # dir.create(save.dir,showWarnings = FALSE)
+  ptar = 0 #population time at risk
+  for(yr in 1:n.followyr){
+    # print(paste("start length(subjects):",length(subjects)))
+    # print(paste("p.mr:",p.mr))
+    # print(paste("avg.ltfur:",avg.ltfur))
     
-    cir = 1-exp((-p.mr)*n.followyr) # cir according to p.mr
-    # avg.p.mr = 1-(1-cir)^(1/n.followyr) # average population mortality rate given a particular n.followyr
+    # n.mos = rpois(n=1,lambda=length(subjects)*p.mr) # no. of mortality-occurence subjects
+    n.mos = rbinom(n=1,size=length(subjects),prob=p.mr)
+    n.ltfus = rbinom(n=1,size=length(subjects),prob=avg.ltfur) # no. of ltfus
+    n.mistake = rbinom(n=1,size=n.mos,prob=per.m.in.ltfus)
+    nominal.n.mos = n.mos-n.mistake
+    n.only.ltfus = n.ltfus-n.mistake # no. of subjects that is loss out of reason of mortality
     
-    par(mfrow=c(1,2))
+    # print(paste("n.mos:",n.mos))
+    # print(paste("n.ltfus:",n.ltfus))
+    # print(paste("n.mistake:",n.mistake))
+    # print(paste("nominal.n.mos:",nominal.n.mos))
+     
+    n.total.mos = n.total.mos+n.mos
+    n.total.ltfus = n.total.ltfus+n.ltfus
+    n.total.nominal.mos = n.total.nominal.mos+nominal.n.mos
+    # print(paste("n.total.mos:",n.total.mos))
+    # print(paste("n.total.ltfus:",n.total.ltfus))
+    # print(paste("n.total.nominal.mos:",n.total.nominal.mos))
     
-    # biases = list() # store the biases for each ltfur (proportion of loss of follow up)
-    for(ltfur in ltfurs){
-      #avg.ltfur = 1-(1-ltfur)^(1/n.followyr) # average loss rate given a particular n.followyr
-      
-      reses = list() #save each res of different per.m.in.lfus for the plotting of bias~ss into reses list 
-      
-      for(per.m.in.ltfus in pers.m.in.ltfus){
-        # library(lpSolve)
-        # A = matrix(c(10*per.m.in.ltfus-10,-10,1,0,0,1),nrow=3,byrow=T)
-        # b = c(cir*per.m.in.ltfus-ltfur-cir-9,0,0)
-        # ans1 = lp(objective.in=c(1,1),const.mat=A,const.rhs=b,const.dir=c("=",">=",">="),dir="min")
-        # avg.pmr = ans1$solution[1]
-        # avg.ltfur = ans1$solution[2]
-        # 
-        # avg.pmr.ltfur = solve(c(10*per.m.in.ltfus-10,-10),cir*per.m.in.ltfus-ltfur-cir-9)
-        # avg.pmr = avg.pmr.ltfur[0]
-        # avg.ltfur = avg.pmr.ltfur[1] 
-      
-        avg.ltfur = 1-p.mr*(1-per.m.in.ltfus)-(1-cir*(1-per.m.in.ltfus)-ltfur)^(1/10)
-        
-        print(paste("pmr =",p.mr))
-        print(paste("avg.ltfur =",avg.ltfur))
-        
-        # res = list(m.mrs=rep(0,n.N),downlm.ci=rep(0,n.N),uplm.ci=rep(0,n.N),bias=rep(0,n.N))
-        # for(i in 1:n.N){ # i means index of sample size 
-        #   n=N[i] # sample size
-        #   
-        #   mrs = rep(0,n.sim)
-        #   # n.total.ltfuss = rep(0,n.sim)
-        #   for(sim in 1:n.sim){ # sim means the (sim)th time of simulation
-        #     subjects = sample(n)
-        #     mrs[sim] = cal.mr(subjects,avg.p.mr,per.m.in.ltfus,n.followyr,avg.ltfur) 
-        #   }
-        #   
-        #   #hist(mrs,breaks="Scott")
-        #   #Sys.sleep(60)
-        #   
-        #   res = cal.m.ci(i,res,mrs) # calculate the mean and ci for our estimation of mortality rate and store them into res list at index i
-        #   res = cal.bias(i,p.mr,res,mrs) # calculate the bias for our estimation of mortality rate and store them into res list at index i
-        # }
-        # reses[[length(reses)+1]] = res
-        # cat(paste("Simulation for level of association =",per.m.in.ltfus,"under \nproportion of loss of follow-up =",ltfur,'&','population inccidence rate =',p.mr,"\nhas been done"))
-        # 
-        # # plot(x=N,y=res$bias,type='l',xlab="Sample Size",ylab="Bias(rmse)",main=paste("Level of Association =",per.m.in.ltfus)) # plot bias~ss
-        # plot.emr.ss(N,p.mr,per.m.in.ltfus,res) # plot emr~ss
-      }
-      #title(paste("Proportion of Loss of Follow-up =",ltfur),outer=T)
-      
-      # plot.bias(N,pers.m.in.ltfus,reses,ltfur)
-      
-      # biases[[length(biases)+1]] = reses[[length(reses)]]$bias
-    }
+    # print(paste("nominal.n.mos+n.ltfus:",nominal.n.mos+n.ltfus))
+    not.keep.follow.s = sample(subjects,nominal.n.mos+n.ltfus)
     
-    # par = (mfrow=c(1,1))
-    # lcols = c("darkred","darkorange","darkgreen","darkblue","purple") # lines colors
-    # for(ltfur in ltfurs){
-    #   bias.plot.index = match(ltfur,ltfurs)
-    #   if(bias.plot.index == 1){
-    #     plot(x=N,y=biases[[bias.plot.index]],type='l',ylim=c(min(sapply(biases, min)),max(sapply(biases, max))),xlab="Sample Size",ylab="Bias",main=paste("Level of Association =",per.m.in.ltfus),col=lcols[bias.plot.index]) # plot bias~ss
-    #   }else{
-    #     lines(x=N,y=biases[[bias.plot.index]],lty=1,col=lcols[bias.plot.index])
-    #     if(bias.plot.index == length(ltfurs)){
-    #       legend("topright",legend=c(paste("proportion =",ltfurs)),lty=rep(1,length(ltfurs)),col=lcols)
-    #     }
-    #   }
-    # }
-    # 
+    
+    subjects = subjects[! subjects %in% not.keep.follow.s]
+    
+    ptar = ptar+n.ltfus*(yr)+nominal.n.mos*(yr-0.5)
   }
+  ptar = ptar+length(subjects)*n.followyr # add the contribution of person-year from each remain subjects to ptar
+  
+  # print(paste("end length(subjects):",length(subjects)))
+  # print(paste("ptar:",ptar))
+  # print(paste("n.total.mos:",n.total.mos))
+  # print(paste("n.total.nominal.mos:",n.total.nominal.mos))
+  # print(paste("n.total.ltfus:",n.total.ltfus))
+  
+  mr = n.total.nominal.mos/ptar # (estimated mortality rate)
+  # print(paste("mr:",mr))
+  
+  actual.cir = (n.total.mos)/n # actual cir
+  actual.mr <<- -log(1-actual.cir)/n.followyr # actual mr
+  # print(paste("actual.mr:",actual.mr))
+  
+  actual.ltfur <<- (n.total.ltfus)/n # actual proportion of loss of follow-up (actual loss rate)
+  # print(paste("actual.ltfur:",actual.ltfur))
+  
+  actual.lv.ass <<- (n.total.mos-n.total.nominal.mos)/n.total.mos # actual level of association (the proportion of mortality that mistaken for loss)
+  # print(paste("actual.lv.ass:",actual.lv.ass))
+  
+  return(mr)
+}
+
+cal.m.ci = function(i,res,mrs){
+  m.mrs = mean(mrs)
+  sd.mrs = sd(mrs)
+  print(paste("mean:",m.mrs))
+  
+  uplm.ci = round(m.mrs+1.96*sd.mrs,4) # uplimit of ci
+  downlm.ci = round(m.mrs-1.96*sd.mrs,4) # downlimit of ci
+  downlm.ci = ifelse(downlm.ci<0,0,downlm.ci) # if downlimit is negative then replace it with 0 
+  print(paste("CI: [",downlm.ci,",",uplm.ci,"]"))
+  
+  res$m.mrs[i] = m.mrs
+  res$downlm.ci[i] = downlm.ci
+  res$uplm.ci[i] = uplm.ci
+  
+  return(res)
+}
+
+cal.bias = function(i,p.mr,res,mrs){
+  #bias = sum(abs(mrs-p.mr)/p.mr)/length(mrs)
+  bias = sum(mrs-p.mr)/length(mrs)
+  # bias = sqrt(sum((mrs-p.mr)^2)/length(mrs))
+  res$bias[i] = bias
+  
+  return(res)
+}
+
+cal.roll.mean = function(n,mean,new_data){
+  mean = mean-mean/n
+  mean = mean+new_data/n
+  return(mean)
+}
+
+cal.mean.actual.params = function(n){ #calculate the mean actual params under particular condition (rolling mean)
+  mean.actual.mr <<- cal.roll.mean(n,mean.actual.mr,actual.mr)
+  mean.actual.ltfur <<- cal.roll.mean(n,mean.actual.ltfur,actual.ltfur)
+  mean.actual.lv.ass <<- cal.roll.mean(n,mean.actual.lv.ass,actual.lv.ass)
+  
+  # print(paste("mean.actual.mr:",mean.actual.mr))
+  # print(paste("mean.actual.ltfur:",mean.actual.ltfur))
+  # print(paste("mean.actual.lv.ass:",mean.actual.lv.ass))
+}
+
+get.mean.actual.params = function(){
+  mean.actual.params.ls = c(mean.actual.mr,mean.actual.ltfur,mean.actual.lv.ass)
+  
+  #reset
+  mean.actual.mr <<- 0
+  mean.actual.ltfur <<- 0
+  mean.actual.lv.ass <<- 0
+  
+  return(mean.actual.params.ls)
 }

@@ -14,12 +14,14 @@ cal.mr = function(n,p.mr,per.m.in.ltfus,n.followyr,avg.ltfur){
   n.total.mos = 0 # no. of total (actual) mortality 
   n.total.nominal.mos = 0 # no. of total nominal mortality 
   n.total.ltfus = 0 # no. of total loss
-  n.total.mistake = 0
+  # n.total.mistake = 0
   
   ptar = 0 #population time at risk
   for(yr in 1:n.followyr){
     # print(paste("start length(subjects):",length(subjects)))
-    n.mos = rpois(n=1,lambda=length(subjects)*p.mr) # no. of mortality-occurence subjects
+    
+    # n.mos = rpois(n=1,lambda=length(subjects)*p.mr) # no. of mortality-occurence subjects
+    n.mos = rbinom(n=1,size=length(subjects),prob=p.mr)
     n.ltfus = rbinom(n=1,size=length(subjects)+n.total.nominal.mos,prob=avg.ltfur) # no. of ltfus
     n.total.ltfus = n.total.ltfus+n.ltfus
     # n.total.ltfuss[sim] = n.total.ltfus
@@ -32,10 +34,10 @@ cal.mr = function(n,p.mr,per.m.in.ltfus,n.followyr,avg.ltfur){
     
     subjects = subjects[! subjects %in% ltfus] # remain only subjects who is not ltfus (1st time to del subjects)
     
-    n.mistake = rpois(n=1,n.mos*per.m.in.ltfus) # no. of mortality that is mistaken for loss
+    n.mistake = rbinom(n=1,size=n.mos,prob=per.m.in.ltfus) # n.mos*per.m.in.ltfus = no. of subjects of mortality that is mistaken for loss
     # n.total.mistake = n.total.mistake+n.mistake
     if(n.mistake <= n.ltfus){ # Did there anyone
-      nominal.n.mos = round(n.mos-n.mistake) # n.mos*per.m.in.ltfus = no. of subjects who is ltfus due to mortality) # where rounding error might happen
+      nominal.n.mos = round(n.mos-n.mistake) # where rounding error might happen
       # print(paste("nominal.n.mos:",nominal.n.mos))
       
       if(nominal.n.mos<=length(subjects)){ # if no. of extra mortality cases is still smaller than th remain subjects

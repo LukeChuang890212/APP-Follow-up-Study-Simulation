@@ -1,8 +1,9 @@
 rm(list=ls())
 
 # setwd("C:/Users/莊明儒/Desktop/Epidemiology/Follow-up.Simulation")
-source("Calculation.r")
+# source("Calculation.r")
 source("Plotting.r")
+source("test.r")
 
 # essential formula:
 # proportion of total not continue to be followed = p.mr+ltfur-p.mr*per.m.in.ltfus
@@ -26,6 +27,7 @@ sim = function(p.mr,ltfur,per.m.in.ltfus){
     # dir.create(save.dir,showWarnings = FALSE)
     
     cir = 1-exp((-p.mr)*n.followyr) # cir according to p.mr
+    # print(paste("cir:",cir))
     
     par(mfrow=c(1,2))
     
@@ -46,7 +48,7 @@ sim = function(p.mr,ltfur,per.m.in.ltfus){
           
           # n.total.ltfuss = rep(0,n.sim)
           for(sim in 1:n.sim){ # sim means the (sim)th time of simulation
-            mrs[sim] = cal.mr(n,p.mr,per.m.in.ltfus,n.followyr,avg.ltfur) 
+            mrs[sim] = cal.mr(n,n.followyr,p.mr,per.m.in.ltfus,avg.ltfur) 
             cal.mean.actual.params(sim)
           }
           
