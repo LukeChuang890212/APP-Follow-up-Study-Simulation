@@ -30,12 +30,12 @@ ui <- fluidPage(
                         "Proportion of Loss of Follow-up:",
                         min = 0.0,
                         max = 1.0,
-                        value = 0.3),
+                        value = 0.0),
             sliderInput("per.m.in.ltfus",
                         "Level of Association:",
                         min = 0.0,
                         max = 0.1,
-                        value = 0.03)
+                        value = 0.00)
         ),
 
         # Show a plot of the generated distribution
