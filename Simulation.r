@@ -1,9 +1,9 @@
 rm(list=ls())
 
 # setwd("C:/Users/莊明儒/Desktop/Epidemiology/Follow-up.Simulation")
-# source("Calculation.r")
+source("Calculation.r")
 source("Plotting.r")
-source("test.r")
+# source("test.r")
 
 # essential formula:
 # proportion of total not continue to be followed = p.mr+ltfur-p.mr*per.m.in.ltfus
